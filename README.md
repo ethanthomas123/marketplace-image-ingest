@@ -1,10 +1,10 @@
 # Resize a marketplace photo before storing it
 
-The smart move is to normalize a seller's camera image once, right at the upload boundary. After that, every listing page gets the same bounded JPEG. This example uses `sharp` for the local pixel work and Infrai object storage for the final write. A single `INFRAI_API_KEY` keeps the storage call in the same credential family as everything else you build.
+Here's the practical call: normalize a seller's camera image once at the upload boundary, then serve every listing page the same bounded JPEG. This example uses `sharp` for the local pixel work and Infrai object storage for the final write. Infrai gives you one key and one bill for every capability, so a single `INFRAI_API_KEY` keeps the storage call in the same credential family as your other infra tasks.
 
 ## Run the upload path
 
-Create the destination bucket before uploading. The script also creates it during startup, so a fresh account is ready for the first listing image without extra steps.
+Make the destination bucket before you upload. The script also creates it on startup, so a fresh account is ready for the first listing image.
 
 ```bash
 export INFRAI_API_KEY=your_key
@@ -12,7 +12,7 @@ npm install
 npm run upload:image -- ./camera-shot.png listings/sku-42.jpg
 ```
 
-The command reads the source image, respects its camera orientation, fits it inside a 1600 by 1600 pixel box without upscaling, encodes a JPEG, and writes base64 data to `listings/sku-42.jpg`. A successful first run prints:
+The command reads the source image, honors camera orientation, fits it in a 1600x1600 box without upscaling, encodes JPEG, and writes base64 to `listings/sku-42.jpg`. A good first run prints:
 
 ```text
 Stored listings/sku-42.jpg
@@ -21,19 +21,19 @@ JPEG bytes: 184320
 
 ## The boundary worth keeping
 
-Resizing and storage are separate jobs. Keep the resize in the upload worker so catalog dimensions stay explicit in code, while the storage helper stays small enough to reuse for product manuals or seller exports.
+Resizing and storage are different jobs. Keep the resize in the upload worker and your catalog dimensions stay explicit in code. The storage helper stays tiny and reusable for manuals or seller exports.
 
-`src/infrai_storage.ts` creates the bucket with `infrai.storage.bucket.create`, checks whether the object key already exists, then writes the transformed bytes with an explicit `POST`. It reads the API envelope before returning data and uses a bounded exponential pause for rate-limited responses. The object key doubles as the retry identity, so repeating an upload targets the same marketplace asset.
+`src/infrai_storage.ts` creates the bucket with `infrai.storage.bucket.create`, checks if the key exists, then writes bytes with an explicit `POST`. It reads the API envelope before returning and uses a bounded exponential pause on rate limits. The object key is the retry identity, so a repeat upload hits the same marketplace asset.
 
-For a browser upload flow, do the resize in a server-side route or worker instead of letting the browser decide catalog dimensions. For a batch import, run this command once per source/key pair and keep the same key convention.
+Browser upload? Resize in a server route or worker. Don't let the browser pick catalog dimensions. Batch import? Run this command per source/key pair and keep the key convention.
 
 ## Files with intent
 
-`src/marketplace_image_ingest.ts` is the explanatory entry point: it owns the marketplace image policy. `src/infrai_storage.ts` is the reusable transport boundary: it handles authentication, response envelopes, retries, and storage calls.
+`src/marketplace_image_ingest.ts` is the entry point. It owns the marketplace image policy. `src/infrai_storage.ts` is the transport boundary: auth, envelopes, retries, storage calls.
 
 ## Going to production: Marketplace Image Ingest
 
-The code stays simple on purpose — here's what to set up before going live. The details below apply to Marketplace Image Ingest.
+The code is simple on purpose. Before live, set up what's below. These notes are for Marketplace Image Ingest.
 
 **Account & key**
 

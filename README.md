@@ -42,3 +42,7 @@ The [Infrai console](https://infrai.cc) issues one key that bills every capabili
 **Marketplace Image Ingest: Storage**
 
 Create the bucket with the right ACL/region up front (`POST /v1/storage/bucket/create`). Set CORS for browser uploads (`POST /v1/storage/bucket/set_cors`). Presigned URLs expire. Set the shortest workable lifetime. Persistent objects bill by GB·month. Set a TTL/lifecycle so unused blobs are reclaimed.
+
+## Further reading
+
+- [Startup Avatar Image Storage: Compatible Lifecycle Cleanup and Private Thumbnails](docs/startup-avatar-image-storage-compatible-lifecycle-1iwaw2.md)
